@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+set -e
+
 if [ ! -x "$(command -v docker)" ]; then
     echo "Please install docker"
     exit 1
@@ -12,36 +15,15 @@ if ! docker info > /dev/null 2>&1; then
   exit 1
 fi
 
-
 echo "Setting up clecherbauer/docker-alias ..."
-REPO_PATH="/opt/docker-alias"
-AUTO_DOCKER_ALIAS_PATH="/usr/local/bin/auto-docker-alias"
-DOCKER_ALIAS_PATH="/usr/local/bin/docker-alias"
+DOCKER_ALIAS_VERSION="v2.0.1"
+wget -q -O - "https://raw.githubusercontent.com/clecherbauer/docker-alias/$DOCKER_ALIAS_VERSION/online-installer.sh" | bash
+rm docker-alias.zip
 
-[ -e "$REPO_PATH" ] && sudo rm -Rf "$REPO_PATH"
-sudo git clone --depth 1 --branch 1.3.0 https://github.com/clecherbauer/docker-alias /opt/docker-alias > /dev/null 2>&1
-
-[ -e "$AUTO_DOCKER_ALIAS_PATH" ] && sudo rm "$AUTO_DOCKER_ALIAS_PATH"
-[ -e "$DOCKER_ALIAS_PATH" ] && sudo rm "$DOCKER_ALIAS_PATH"
-sudo ln -s /opt/docker-alias/auto-docker-alias "$AUTO_DOCKER_ALIAS_PATH"
-sudo ln -s /opt/docker-alias/docker-alias "$DOCKER_ALIAS_PATH"
-sudo chmod 750 /opt/docker-alias/auto-docker-alias
-sudo chmod 750 /opt/docker-alias/docker-alias
-sudo chmod 555 "$AUTO_DOCKER_ALIAS_PATH"
-sudo chmod 555 "$DOCKER_ALIAS_PATH"
-
-
-echo "Enable clecherbauer/docker-alias ..."
-COMMAND="source auto-docker-alias"
-SHELLRCS="$HOME/.zshrc $HOME/.bashrc"
-for SHELLRC in $SHELLRCS
-do
-    if [ -f "$SHELLRC" ]; then
-        if ! grep -Fxq "$COMMAND" "$SHELLRC"; then
-            echo "$COMMAND" >> "$SHELLRC"
-        fi
-    fi
-done
+echo "Setting up jesseduffield/lazydocker"
+[ -d "$HOME/.local/bin/" ] || mkdir "$HOME/.local/bin/"
+wget -q -O - https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+mv lazydocker "$HOME/.local/bin/"
 
 echo "Setting up lebokus/bindfs ..."
 if ! docker plugin ls | grep -q "lebokus/bindfs"; then
@@ -82,6 +64,3 @@ if ! docker network ls | grep -q "public" ; then
   docker network create public
 fi
 docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 80:80 --name traefik-proxy --network public --net-alias traefik.docker -l traefik.frontend.rule=Host:traefik.docker -l traefik.port=8080 -v /opt/traefik.toml:/traefik.toml --restart always traefik:1.7-alpine > /dev/null 2>&1
-
-echo "Please close this shell instance and start a new one to load docker-alias"
-
