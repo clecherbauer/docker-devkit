@@ -15,6 +15,25 @@ if ! docker info > /dev/null 2>&1; then
   exit 1
 fi
 
+echo "Setting up direnv"
+(
+  export bin_path="$HOME/.local/bin"
+  wget -q -O - https://direnv.net/install.sh | bash
+  SHELLS="zsh bash"
+  for _SHELL in $SHELLS
+  do
+      SHELLRC="$HOME/.$_SHELL"rc
+      COMMAND="eval \"\$(direnv hook $_SHELL)\""
+      echo $COMMAND
+      echo $SHELLRC
+      if [ -f "$SHELLRC" ]; then
+          if ! grep -Fxq "$COMMAND" "$SHELLRC"; then
+              echo "$COMMAND" >> "$SHELLRC"
+          fi
+      fi
+  done
+)
+
 echo "Setting up clecherbauer/docker-alias ..."
 DOCKER_ALIAS_VERSION="v2.0.1"
 wget -q -O - "https://raw.githubusercontent.com/clecherbauer/docker-alias/$DOCKER_ALIAS_VERSION/online-installer.sh" | bash
