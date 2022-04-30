@@ -18,14 +18,12 @@ fi
 echo "Setting up direnv"
 (
   export bin_path="$HOME/.local/bin"
-  wget -q -O - https://direnv.net/install.sh | bash
+  wget -q -O - https://direnv.net/install.sh | bash > /dev/null 2>&1
   SHELLS="zsh bash"
   for _SHELL in $SHELLS
   do
       SHELLRC="$HOME/.$_SHELL"rc
       COMMAND="eval \"\$(direnv hook $_SHELL)\""
-      echo $COMMAND
-      echo $SHELLRC
       if [ -f "$SHELLRC" ]; then
           if ! grep -Fxq "$COMMAND" "$SHELLRC"; then
               echo "$COMMAND" >> "$SHELLRC"
@@ -35,13 +33,13 @@ echo "Setting up direnv"
 )
 
 echo "Setting up clecherbauer/docker-alias ..."
-DOCKER_ALIAS_VERSION="v2.0.1"
-wget -q -O - "https://raw.githubusercontent.com/clecherbauer/docker-alias/$DOCKER_ALIAS_VERSION/online-installer.sh" | bash
-rm docker-alias.zip
+DOCKER_ALIAS_VERSION="v2.0.2"
+wget -qO- "https://gitlab.com/clecherbauer/tools/docker-alias/-/raw/"$DOCKER_ALIAS_VERSION"/linux/online-installer.sh" | bash
+rm docker-alias.linux64.zip
 
 echo "Setting up jesseduffield/lazydocker"
 [ -d "$HOME/.local/bin/" ] || mkdir "$HOME/.local/bin/"
-wget -q -O - https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+wget -qO- https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash > /dev/null 2>&1
 mv lazydocker "$HOME/.local/bin/"
 
 echo "Setting up lebokus/bindfs ..."
@@ -49,12 +47,12 @@ if ! docker plugin ls | grep -q "lebokus/bindfs"; then
   docker plugin install lebokus/bindfs --grant-all-permissions > /dev/null 2>&1
 fi
 
-echo "Setting up costela/docker-etchosts ..."
-if docker ps -a | grep -q "docker-etchosts" ; then
-    docker kill docker-etchosts || true > /dev/null 2>&1
-    docker rm docker-etchosts > /dev/null 2>&1
+echo "Setting up clecherbauer/docker-hosts ..."
+if docker ps -a | grep -q "docker-hosts" ; then
+    docker kill docker-hosts || true > /dev/null 2>&1
+    docker rm docker-hosts > /dev/null 2>&1
 fi
-docker run -d --name docker-etchosts --network none --restart always -v /etc/hosts:/etc/hosts -v /var/run/docker.sock:/var/run/docker.sock costela/docker-etchosts > /dev/null 2>&1
+docker run -d --name docker-hosts --network none --restart always -v /etc/hosts:/etc/hosts -v /var/run/docker.sock:/var/run/docker.sock registry.gitlab.com/clecherbauer/tools/docker-hosts:v1.0.1 > /dev/null 2>&1
 
 echo "Setting up traefik ..."
 sudo tee /opt/traefik.toml > /dev/null <<EOT
@@ -83,3 +81,5 @@ if ! docker network ls | grep -q "public" ; then
   docker network create public
 fi
 docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 80:80 --name traefik-proxy --network public --net-alias traefik.docker -l traefik.frontend.rule=Host:traefik.docker -l traefik.port=8080 -v /opt/traefik.toml:/traefik.toml --restart always traefik:1.7-alpine > /dev/null 2>&1
+
+echo "In order to use direnv and docker-alias, please reload this shell!"
