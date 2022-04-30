@@ -17,6 +17,8 @@ fi
 
 echo "Setting up direnv"
 (
+  USER_BIN_DIR="$HOME/.local/bin"
+  if [ ! -d "$USER_BIN_DIR" ]; then mkdir -p "$USER_BIN_DIR"; fi
   export bin_path="$HOME/.local/bin"
   wget -q -O - https://direnv.net/install.sh | bash > /dev/null 2>&1
   SHELLS="zsh bash"
@@ -34,7 +36,7 @@ echo "Setting up direnv"
 
 echo "Setting up clecherbauer/docker-alias ..."
 DOCKER_ALIAS_VERSION="v2.0.2"
-wget -qO- "https://gitlab.com/clecherbauer/tools/docker-alias/-/raw/"$DOCKER_ALIAS_VERSION"/linux/online-installer.sh" | bash
+wget -qO- "https://gitlab.com/clecherbauer/tools/docker-alias/-/raw/"$DOCKER_ALIAS_VERSION"/linux/online-installer.sh" | bash > /dev/null 2>&1
 rm docker-alias.linux64.zip
 
 echo "Setting up jesseduffield/lazydocker"
