@@ -15,6 +15,12 @@ if ! docker info > /dev/null 2>&1; then
   exit 1
 fi
 
+if [ ! -x "$(command -v unzip)" ]; then
+    echo "unzip is missing!"
+    sudo apt update
+    sudo apt install unzip
+fi
+
 echo "Setting up direnv"
 (
   USER_BIN_DIR="$HOME/.local/bin"

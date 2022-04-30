@@ -3,6 +3,7 @@
 
 ### Requirements:
 - linux (tested with Ubuntu 20.04)
+- unzip
 - docker
 - docker-compose
 - zsh or bash
