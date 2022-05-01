@@ -3,6 +3,7 @@ set -e
 
 DOCKER_ALIAS_VERSION="v2.0.4"
 DOCKER_HOSTS_VERSION="v1.1.1"
+SHELLS="zsh bash"
 
 if [ ! -x "$(command -v docker)" ]; then
     echo "Please install docker"
@@ -35,18 +36,12 @@ function report_on_error() {
     set -e
 }
 
-function setup_wsl() {
-    echo "Setting up clecherbauer/docker-alias ..."
-    if [ -f docker-alias.linux64.zip ]; then
-      rm docker-alias.linux64.zip
-    fi
-    report_on_error 'wget -qO- "https://gitlab.com/clecherbauer/tools/docker-alias/-/raw/"$DOCKER_ALIAS_VERSION"/linux/online-installer.sh" | bash'
+function append_to_shells() {
     (
-      SHELLS="zsh bash"
       for _SHELL in $SHELLS
       do
           SHELLRC="$HOME/.$_SHELL"rc
-          COMMAND="docker-alias-daemon start"
+          COMMAND="$1"
           if [ -f "$SHELLRC" ]; then
               if ! grep -Fxq "$COMMAND" "$SHELLRC"; then
                   echo "$COMMAND" >> "$SHELLRC"
@@ -54,6 +49,16 @@ function setup_wsl() {
           fi
       done
     )
+}
+
+function setup_wsl() {
+    echo "Setting up clecherbauer/docker-alias ..."
+    if [ -f docker-alias.linux64.zip ]; then
+      rm docker-alias.linux64.zip
+    fi
+    report_on_error 'wget -qO- "https://gitlab.com/clecherbauer/tools/docker-alias/-/raw/"$DOCKER_ALIAS_VERSION"/linux/online-installer.sh" | bash'
+    append_to_shells "PATH=\$HOME/.local/bin:\$PATH"
+    append_to_shells "docker-alias-daemon start"
     if [ -f docker-alias.linux64.zip ]; then
       rm docker-alias.linux64.zip
     fi
@@ -65,19 +70,7 @@ function setup_linux() {
       rm docker-alias.linux64.zip
     fi
     report_on_error 'wget -qO- "https://gitlab.com/clecherbauer/tools/docker-alias/-/raw/"$DOCKER_ALIAS_VERSION"/linux/online-installer.sh" | bash'
-    (
-      SHELLS="zsh bash"
-      for _SHELL in $SHELLS
-      do
-          SHELLRC="$HOME/.$_SHELL"rc
-          COMMAND="docker-alias-daemon start"
-          if [ -f "$SHELLRC" ]; then
-              if ! grep -Fxq "$COMMAND" "$SHELLRC"; then
-                  echo "$COMMAND" >> "$SHELLRC"
-              fi
-          fi
-      done
-    )
+    append_to_shells "docker-alias-daemon start"
     if [ -f docker-alias.linux64.zip ]; then
       rm docker-alias.linux64.zip
     fi
