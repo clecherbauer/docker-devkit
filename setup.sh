@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-DOCKER_ALIAS_VERSION="v2.0.4"
+DOCKER_ALIAS_VERSION="v2.1.0"
 DOCKER_HOSTS_VERSION="v1.1.1"
 SHELLS="zsh bash"
 
@@ -100,11 +100,6 @@ function setup_general() {
     [ -d "$HOME/.local/bin/" ] || mkdir "$HOME/.local/bin/"
     report_on_error 'wget -qO- https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash'
     mv lazydocker "$HOME/.local/bin/"
-
-    echo "Setting up lebokus/bindfs ..."
-    if ! docker plugin ls | grep -q "lebokus/bindfs"; then
-      report_on_error 'docker plugin install lebokus/bindfs --grant-all-permissions'
-    fi
 
     echo "Setting up clecherbauer/docker-hosts ..."
     if docker ps -a | grep -q "docker-hosts" ; then
