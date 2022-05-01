@@ -37,8 +37,10 @@ function report_on_error() {
 
 function setup_wsl() {
     echo "Setting up clecherbauer/docker-alias ..."
+    if [ -f docker-alias.linux64.zip ]; then
+      rm docker-alias.linux64.zip
+    fi
     report_on_error 'wget -qO- "https://gitlab.com/clecherbauer/tools/docker-alias/-/raw/"$DOCKER_ALIAS_VERSION"/linux/online-installer.sh" | bash'
-    rm docker-alias.linux64.zip
     (
       SHELLS="zsh bash"
       for _SHELL in $SHELLS
@@ -52,12 +54,17 @@ function setup_wsl() {
           fi
       done
     )
+    if [ -f docker-alias.linux64.zip ]; then
+      rm docker-alias.linux64.zip
+    fi
 }
 
 function setup_linux() {
     echo "Setting up clecherbauer/docker-alias ..."
+    if [ -f docker-alias.linux64.zip ]; then
+      rm docker-alias.linux64.zip
+    fi
     report_on_error 'wget -qO- "https://gitlab.com/clecherbauer/tools/docker-alias/-/raw/"$DOCKER_ALIAS_VERSION"/linux/online-installer.sh" | bash'
-    rm docker-alias.linux64.zip
     (
       SHELLS="zsh bash"
       for _SHELL in $SHELLS
@@ -71,6 +78,9 @@ function setup_linux() {
           fi
       done
     )
+    if [ -f docker-alias.linux64.zip ]; then
+      rm docker-alias.linux64.zip
+    fi
 }
 
 function setup_general() {
