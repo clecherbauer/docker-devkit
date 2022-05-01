@@ -62,6 +62,13 @@ function setup_wsl() {
     if [ -f docker-alias.linux64.zip ]; then
       rm docker-alias.linux64.zip
     fi
+
+    echo "Setting up clecherbauer/docker-hosts ..."
+    if docker ps -a | grep -q "docker-hosts" ; then
+        docker kill docker-hosts || true > /dev/null 2>&1
+        docker rm docker-hosts > /dev/null 2>&1
+    fi
+    report_on_error 'docker run -d --name docker-hosts --network none --restart always -v /mnt/c/Windows/System32/drivers/etc/hosts:/etc/hosts -v /var/run/docker.sock:/var/run/docker.sock "registry.gitlab.com/clecherbauer/tools/docker-hosts:$DOCKER_HOSTS_VERSION"'
 }
 
 function setup_linux() {
@@ -74,6 +81,13 @@ function setup_linux() {
     if [ -f docker-alias.linux64.zip ]; then
       rm docker-alias.linux64.zip
     fi
+
+    echo "Setting up clecherbauer/docker-hosts ..."
+    if docker ps -a | grep -q "docker-hosts" ; then
+        docker kill docker-hosts || true > /dev/null 2>&1
+        docker rm docker-hosts > /dev/null 2>&1
+    fi
+    report_on_error 'docker run -d --name docker-hosts --network none --restart always -v /etc/hosts:/etc/hosts -v /var/run/docker.sock:/var/run/docker.sock "registry.gitlab.com/clecherbauer/tools/docker-hosts:$DOCKER_HOSTS_VERSION"'
 }
 
 function setup_general() {
@@ -100,13 +114,6 @@ function setup_general() {
     [ -d "$HOME/.local/bin/" ] || mkdir "$HOME/.local/bin/"
     report_on_error 'wget -qO- https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash'
     mv lazydocker "$HOME/.local/bin/"
-
-    echo "Setting up clecherbauer/docker-hosts ..."
-    if docker ps -a | grep -q "docker-hosts" ; then
-        docker kill docker-hosts || true > /dev/null 2>&1
-        docker rm docker-hosts > /dev/null 2>&1
-    fi
-    report_on_error 'docker run -d --name docker-hosts --network none --restart always -v /etc/hosts:/etc/hosts -v /var/run/docker.sock:/var/run/docker.sock "registry.gitlab.com/clecherbauer/tools/docker-hosts:$DOCKER_HOSTS_VERSION"'
 
     echo "Setting up traefik ..."
     sudo tee /opt/traefik.toml > /dev/null <<EOT
