@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-DOCKER_ALIAS_VERSION="v2.1.0"
-DOCKER_HOSTS_VERSION="v1.1.1"
+DOCKER_ALIAS_VERSION="v2.2.5"
+DOCKER_HOSTS_VERSION="v1.2.2"
 SHELLS="zsh bash"
 
 if [ ! -x "$(command -v docker)" ]; then
@@ -20,11 +20,16 @@ if ! docker info > /dev/null 2>&1; then
 fi
 
 if [ ! -x "$(command -v unzip)" ]; then
-    echo "unzip is missing!"
+    echo "Please install unzip"
     sudo apt update
     sudo apt install unzip
 fi
 
+if [ ! -x "$(command -v curl)" ]; then
+    echo "Please install curl"
+    sudo apt update
+    sudo apt install curl
+fi
 
 function report_on_error() {
     set +e
@@ -58,17 +63,11 @@ function setup_wsl() {
     fi
     report_on_error 'wget -qO- "https://gitlab.com/clecherbauer/tools/docker-alias/-/raw/"$DOCKER_ALIAS_VERSION"/linux/online-installer.sh" | bash'
     append_to_shells "PATH=\$HOME/.local/bin:\$PATH"
-    append_to_shells "docker-alias-daemon start"
+    append_to_shells "docker-alias-daemon start &"
+
     if [ -f docker-alias.linux64.zip ]; then
       rm docker-alias.linux64.zip
     fi
-
-    echo "Setting up clecherbauer/docker-hosts ..."
-    if docker ps -a | grep -q "docker-hosts" ; then
-        docker kill docker-hosts || true > /dev/null 2>&1
-        docker rm docker-hosts > /dev/null 2>&1
-    fi
-    report_on_error 'docker run -d --name docker-hosts --network none --restart always -v /mnt/c/Windows/System32/drivers/etc/hosts:/etc/hosts -v /var/run/docker.sock:/var/run/docker.sock "registry.gitlab.com/clecherbauer/tools/docker-hosts:$DOCKER_HOSTS_VERSION"'
 }
 
 function setup_linux() {
@@ -77,7 +76,8 @@ function setup_linux() {
       rm docker-alias.linux64.zip
     fi
     report_on_error 'wget -qO- "https://gitlab.com/clecherbauer/tools/docker-alias/-/raw/"$DOCKER_ALIAS_VERSION"/linux/online-installer.sh" | bash'
-    append_to_shells "docker-alias-daemon start"
+    append_to_shells "PATH=\$HOME/.local/bin:\$PATH"
+    append_to_shells "docker-alias-daemon start &"
     if [ -f docker-alias.linux64.zip ]; then
       rm docker-alias.linux64.zip
     fi
@@ -93,27 +93,32 @@ function setup_linux() {
 function setup_general() {
     echo "Setting up direnv"
     (
-      USER_BIN_DIR="$HOME/.local/bin"
-      if [ ! -d "$USER_BIN_DIR" ]; then mkdir -p "$USER_BIN_DIR"; fi
-      export bin_path="$HOME/.local/bin"
-      wget -q -O - https://direnv.net/install.sh | bash > /dev/null 2>&1
-      SHELLS="zsh bash"
-      for _SHELL in $SHELLS
-      do
-          SHELLRC="$HOME/.$_SHELL"rc
-          COMMAND="eval \"\$(direnv hook $_SHELL)\""
-          if [ -f "$SHELLRC" ]; then
-              if ! grep -Fxq "$COMMAND" "$SHELLRC"; then
-                  echo "$COMMAND" >> "$SHELLRC"
-              fi
-          fi
-      done
+        USER_BIN_DIR="$HOME/.local/bin"
+        if [ ! -d "$USER_BIN_DIR" ]; then mkdir -p "$USER_BIN_DIR"; fi
+        export bin_path="$HOME/.local/bin"
+        wget -q -O - https://direnv.net/install.sh | bash > /dev/null 2>&1
+        SHELLS="zsh bash"
+        for _SHELL in $SHELLS
+        do
+            SHELLRC="$HOME/.$_SHELL"rc
+            COMMAND="eval \"\$(direnv hook $_SHELL)\""
+            if [ -f "$SHELLRC" ]; then
+                if ! grep -Fxq "$COMMAND" "$SHELLRC"; then
+                    echo "$COMMAND" >> "$SHELLRC"
+                fi
+            fi
+        done
     )
 
     echo "Setting up jesseduffield/lazydocker"
     [ -d "$HOME/.local/bin/" ] || mkdir "$HOME/.local/bin/"
     report_on_error 'wget -qO- https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash'
     mv lazydocker "$HOME/.local/bin/"
+
+    echo "Setting up lebokus/bindfs ..."
+    if ! docker plugin ls | grep -q "lebokus/bindfs"; then
+        report_on_error 'docker plugin install lebokus/bindfs --grant-all-permissions'
+    fi
 
     echo "Setting up traefik ..."
     sudo tee /opt/traefik.toml > /dev/null <<EOT
