@@ -77,7 +77,7 @@ function setup_linux() {
     fi
     report_on_error 'wget -qO- "https://gitlab.com/clecherbauer/tools/docker-alias/-/raw/"$DOCKER_ALIAS_VERSION"/linux/online-installer.sh" | bash'
     append_to_shells "PATH=\$HOME/.local/bin:\$PATH"
-    append_to_shells "docker-alias-daemon start &"
+    append_to_shells "(docker-alias-daemon start &)"
     if [ -f docker-alias.linux64.zip ]; then
       rm docker-alias.linux64.zip
     fi
