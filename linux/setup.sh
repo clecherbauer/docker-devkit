@@ -113,7 +113,6 @@ function setup_general() {
     echo "Setting up jesseduffield/lazydocker"
     [ -d "$HOME/.local/bin/" ] || mkdir "$HOME/.local/bin/"
     report_on_error 'wget -qO- https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash'
-    mv lazydocker "$HOME/.local/bin/"
 
     echo "Setting up lebokus/bindfs ..."
     if ! docker plugin ls | grep -q "lebokus/bindfs"; then
