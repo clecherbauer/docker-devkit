@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-DOCKER_ALIAS_VERSION="v2.2.9"
+DOCKER_ALIAS_VERSION="v2.2.10"
 DOCKER_HOSTS_VERSION="v1.2.2"
 SHELLS="zsh bash"
 
