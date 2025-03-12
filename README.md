@@ -11,7 +11,7 @@ easy to use docker gui
 ### traefik
 is needed to access containers in docker-desktop environments or enables you to access your containers from your network in linux environments (usefully for mobile-testing)
 
-## Ubuntu (tested with Ubuntu 20.04)
+## Ubuntu (tested with Ubuntu 20.04, 22.04)
 ### Requirements:
 - unzip
 - docker
