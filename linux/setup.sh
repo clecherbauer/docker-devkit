@@ -9,8 +9,8 @@ if [ ! -x "$(command -v docker)" ]; then
     echo "Please install docker"
     exit 1
 fi
-if [ ! -x "$(command -v docker-compose)" ]; then
-    echo "Please install docker-compose"
+if ! type docker-compose > /dev/null 2>&1 || ! command -v docker-compose >/dev/null 2>&1; then
+    echo "Please ensure docker-compose is installed and executable"
     exit 1
 fi
 
