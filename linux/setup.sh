@@ -3,14 +3,16 @@ set -e
 
 DOCKER_ALIAS_VERSION="v2.4.6"
 DOCKER_HOSTS_VERSION="v1.2.2"
-SHELLS="zsh bash"
+SUPPORTED_SHELLS="zsh bash"
+
 
 if [ ! -x "$(command -v docker)" ]; then
     echo "Please install docker"
     exit 1
 fi
-if ! type docker-compose > /dev/null 2>&1 || ! command -v docker-compose >/dev/null 2>&1; then
-    echo "Please ensure docker-compose is installed and executable"
+
+if ! command -v docker-compose >/dev/null 2>&1 && (! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1); then
+    echo "Please install docker-compose"
     exit 1
 fi
 
@@ -43,7 +45,7 @@ function report_on_error() {
 
 function append_to_shells() {
     (
-      for _SHELL in $SHELLS
+      for _SHELL in $SUPPORTED_SHELLS
       do
           SHELLRC="$HOME/.$_SHELL"rc
           COMMAND="$1"
@@ -97,8 +99,7 @@ function setup_general() {
         if [ ! -d "$USER_BIN_DIR" ]; then mkdir -p "$USER_BIN_DIR"; fi
         export bin_path="$HOME/.local/bin"
         wget -q -O - https://direnv.net/install.sh | bash > /dev/null 2>&1
-        SHELLS="zsh bash"
-        for _SHELL in $SHELLS
+        for _SHELL in $SUPPORTED_SHELLS
         do
             SHELLRC="$HOME/.$_SHELL"rc
             COMMAND="eval \"\$(direnv hook $_SHELL)\""
@@ -147,7 +148,7 @@ EOT
     fi
     report_on_error 'docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 80:80 --name traefik-proxy --network public --net-alias traefik.docker -l traefik.frontend.rule=Host:traefik.docker -l traefik.port=8080 -v /opt/traefik.toml:/traefik.toml --restart always traefik:1.7-alpine'
 
-    echo "In order to use direnv and docker-alias, please reload this shell!"
+    echo "Please reload this shell in order to use direnv and docker-alias."
 }
 
 if grep -q WSL2 /proc/version; then
