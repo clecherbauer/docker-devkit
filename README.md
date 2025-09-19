@@ -1,71 +1,83 @@
 # docker-devkit
-A collection of tools for a more developer-friendly experience with docker
+A collection of helper scripts that turn plain Docker installations into a more comfortable development environment on Linux, Windows (WSL2), and macOS.
 
-## Features:
-### docker-hosts
-expose all containers with network aliases to the machines /etc/hosts file, so you dont need to take care about port bindings  
-### docker-alias
-dockerized tools 
-### lazydocker
-easy to use docker gui
-### traefik
-is needed to access containers in docker-desktop environments or enables you to access your containers from your network in linux environments (usefully for mobile-testing)
+## Highlights
+- **docker-hosts** – keeps `/etc/hosts` in sync with container network aliases so you can skip manual port bindings
+- **docker-alias** – bundles a toolbox of Docker-centric commands in one binary with auto-started helpers
+- **lazydocker** – brings an approachable TUI for inspecting containers, volumes, and logs
+- **Traefik proxy** – optional reverse proxy for easy access to services that expose HTTP endpoints
+- **direnv integration** – automatically loads project-specific environment variables when you `cd` into a directory
 
-## Ubuntu (tested with Ubuntu 20.04, 22.04)
-### Requirements:
-- unzip
-- docker
-- docker-compose
-- zsh or bash
-- sufficient permissions to execute docker commands (adduser int docker group)
+## Supported Environments
+- Ubuntu 20.04 / 22.04 LTS (native or in WSL2)
+- Windows 10 / 11 with WSL2 and Docker Desktop
+- macOS (experimental; see notes below)
 
-### Installation
-`wget -q -O - "https://gitlab.com/clecherbauer/tools/docker-devkit/-/raw/master/linux/setup.sh" | bash`
+## Linux / WSL Ubuntu
+**Requirements**
+- Docker Engine with your user added to the `docker` group
+- Docker Compose (`docker compose` plugin or standalone `docker-compose` binary)
+- `curl`, `unzip`, and either `bash` or `zsh`
 
-
-## Windows (tested with Windows 10 Pro)
-### Requirements:
-- Virtualization enabled in BIOS
-- WSL2
-- docker-desktop
-- Ubuntu on WSL
-
-### Installation of the Dependencies:
-This part will install WSL2, docker-desktop and docker-hosts.
-
-1. Make sure Windows is fully updated (and rebooted), and you are running an administrative PowerShell.
-2. Execute the following commands:
-`Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://gitlab.com/clecherbauer/tools/docker-devkit/-/raw/master/windows/setup_dependencies.ps1'))
-`
-3. Wait - This step will take some time, so grab a cup of Coffee :)
-4. Reboot your Machine
-5. Go to the Microsoft App Store and pick Ubuntu 20.04 [tutorial](https://ubuntu.com/tutorials/install-ubuntu-on-wsl2-on-windows-10#3-download-ubuntu)
-6. wsl --install -d ubuntu
-7. make ubuntu your default WSL Distro with `wsl --setdefault ubuntu` so you dont have to add `-d ubuntu` everytime.
-8. Enable docker-desktop WSL Integration for your Ubuntu Distro, to do so please follow [this](https://docs.docker.com/desktop/windows/wsl/#:~:text=Start%20Docker%20Desktop%20from%20the,will%20be%20enabled%20by%20default).
-
-   (docker-desktop -> settings -> Resources -> WSL-Integration -> Enable integration with my default WSL distro)
-
-
-### Installation in WSL Ubuntu:
-This part will install docker-alias, direnv and xy
-
-1. Enable [WSL Metadata](https://alessandrococco.com/2021/01/wsl-how-to-resolve-operation-not-permitted-error-on-cloning-a-git-repository):
+**Installation**
+```bash
+wget -q -O - "https://raw.githubusercontent.com/clecherbauer/tools/docker-devkit/master/linux/setup.sh" | bash
 ```
-wsl
-sudo su
-echo "[automount]" > /etc/wsl.conf
-echo "options = \"metadata\"" >> /etc/wsl.conf
-exit
-exit
-wsl --shutdown
-```
-2. Restart Docker-Desktop
-3. Switch back into WSL Ubuntu: `wsl`.
-4. Execute the following command:
-`wget -q -O - "https://gitlab.com/clecherbauer/tools/docker-devkit/-/raw/master/linux/setup.sh" | bash`
+The script installs the toolchain, ensures daemons are started, and downloads configuration such as `/opt/traefik.toml`. You may be prompted for `sudo` when system-level files need to be written.
 
-## macOS (tested with macOS xyz)
-### Requirements:
-- enabled virtualization
-- docker-desktop
+**Updating**
+Re-run the installation command whenever you want to pull the latest versions of the bundled tools. Existing configurations (for example, shell rc files) are only appended to when new entries are required.
+
+## Windows (WSL2)
+**Requirements**
+- Virtualization enabled in BIOS / UEFI
+- Windows 10 Pro/Enterprise or Windows 11 with the WSL feature available
+- Administrative PowerShell session for the host setup
+
+**Prepare the Windows host**
+1. Make sure Windows Update has completed and reboot if required.
+2. Run an elevated PowerShell session and execute:
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process -Force; \
+   [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
+   iex ((New-Object System.Net.WebClient).DownloadString('https://gitlab.com/clecherbauer/tools/docker-devkit/-/raw/master/windows/setup_dependencies.ps1'))
+   ```
+   This installs WSL2, Docker Desktop, Chocolatey, and the Windows-side `docker-hosts` integration.
+3. Reboot once the script finishes to ensure WSL and Docker Desktop complete their setup.
+4. Install Ubuntu 20.04 (or later) from the Microsoft Store and make it the default distribution: `wsl --setdefault ubuntu`.
+5. In Docker Desktop → Settings → Resources → WSL Integration, enable integration for your Ubuntu distribution.
+
+**Install inside WSL Ubuntu**
+1. Enable metadata support for your mounted Windows drives (avoids permission issues):
+   ```bash
+   cat <<'EOT' | sudo tee /etc/wsl.conf >/dev/null
+   [automount]
+   options = "metadata"
+   EOT
+   ```
+   Exit the WSL session and run `wsl --shutdown` from Windows PowerShell or Command Prompt, then reopen Ubuntu.
+2. Inside Ubuntu, run the Linux installer:
+   ```bash
+   wget -q -O - "https://raw.githubusercontent.com/clecherbauer/tools/docker-devkit/master/linux/setup.sh" | bash
+   ```
+
+## macOS (experimental)
+Basic scripts live under `macos/`, but automation is still a work in progress. For now:
+- Install Docker Desktop for Mac.
+- Ensure `curl`, `wget`, and `direnv` are available (`brew install curl wget direnv`).
+- Review and adapt the Linux script or contribute improvements to `macos/setup.sh` to match your workflow.
+
+## Verification
+After installation, confirm the tooling works:
+- `docker ps` and `docker compose version` should succeed without `sudo`.
+- `docker ps --format '{{.Names}}'` should list a running `docker-hosts` container.
+- `which docker-alias` should resolve to `~/.local/bin/docker-alias`.
+- `lazydocker` should start the TUI within the terminal.
+
+## Troubleshooting
+- If Docker commands fail with permission errors, log out and back in (or restart WSL) so the updated group membership takes effect.
+- Traefik listens on port 80. Stop the `traefik-proxy` container (`docker stop traefik-proxy`) if you need that port for something else.
+- Re-run the setup script with `bash -x` for verbose output if you need to diagnose installation issues.
+
+## Contributing
+Issues and pull requests that improve the setup scripts, especially macOS support, are very welcome. Check the `linux/`, `windows/`, and `macos/` directories for platform-specific logic before submitting changes.

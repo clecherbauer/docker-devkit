@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-DOCKER_ALIAS_VERSION="v2.4.6"
+DOCKER_ALIAS_VERSION="v2.4.9"
 DOCKER_HOSTS_VERSION="v1.2.2"
 SUPPORTED_SHELLS="zsh bash"
 
@@ -114,11 +114,6 @@ function setup_general() {
     echo "Setting up jesseduffield/lazydocker"
     [ -d "$HOME/.local/bin/" ] || mkdir "$HOME/.local/bin/"
     report_on_error 'wget -qO- https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash'
-
-    echo "Setting up lebokus/bindfs ..."
-    if ! docker plugin ls | grep -q "lebokus/bindfs"; then
-        report_on_error 'docker plugin install lebokus/bindfs --grant-all-permissions'
-    fi
 
     echo "Setting up traefik ..."
     sudo tee /opt/traefik.toml > /dev/null <<EOT
